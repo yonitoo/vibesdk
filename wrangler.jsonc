@@ -55,13 +55,13 @@
 		"binding": "AI",
         "remote": true
 	},
-    // "dispatch_namespaces": [
-    //     {
-    //         "binding": "DISPATCHER",
-    //         "namespace": "vibesdk-default-namespace",
-    //         "remote": true
-    //     }
-    // ],
+    "dispatch_namespaces": [
+        {
+            "binding": "DISPATCHER",
+            "namespace": "vibesdk-default-namespace",
+            "remote": false
+        }
+    ],
 	"containers": [
 		{
 			"class_name": "UserAppSandboxService",

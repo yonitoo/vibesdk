@@ -3,9 +3,36 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import svgr from 'vite-plugin-svgr';
 import path from 'path';
+import fs from 'fs';
 
 import { cloudflare } from '@cloudflare/vite-plugin';
 import tailwindcss from '@tailwindcss/vite';
+
+function resolveWranglerConfigPath(): string {
+	const baseConfigPath = 'wrangler.jsonc';
+	if (!process.env.DEV_MODE) {
+		return baseConfigPath;
+	}
+
+	const raw = fs.readFileSync(path.resolve(__dirname, baseConfigPath), 'utf8');
+	const stripped = JSON.parse(stripJsonc(raw)) as Record<string, unknown>;
+	delete stripped.dispatch_namespaces;
+
+	// Write alongside wrangler.jsonc so relative paths (e.g. the container
+	// Dockerfile and migrations_dir) still resolve against this directory.
+	const devConfigPath = path.resolve(__dirname, '.wrangler.dev.jsonc');
+	fs.writeFileSync(devConfigPath, JSON.stringify(stripped, null, 2));
+	return devConfigPath;
+}
+
+// Minimal JSONC -> JSON: strip // and /* */ comments and trailing commas.
+function stripJsonc(input: string): string {
+	const withoutComments = input
+		.replace(/\\"|"(?:\\.|[^"\\])*"|\/\/[^\n]*|\/\*[\s\S]*?\*\//g, (match) =>
+			match.startsWith('//') || match.startsWith('/*') ? '' : match,
+		);
+	return withoutComments.replace(/,(\s*[}\]])/g, '$1');
+}
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -28,7 +55,7 @@ export default defineConfig({
 		react(),
 		svgr(),
 		cloudflare({
-			configPath: 'wrangler.jsonc',
+			configPath: resolveWranglerConfigPath(),
 		}),
 		tailwindcss(),
 		// sentryVitePlugin({
