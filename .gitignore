@@ -40,7 +40,6 @@ runner/downloads
 test.ts
 temp/
 
-templates
 debugging.ipynb
 
 #bun.lock
